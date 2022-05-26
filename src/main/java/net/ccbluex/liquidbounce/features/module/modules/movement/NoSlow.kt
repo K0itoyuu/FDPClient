@@ -28,7 +28,7 @@ import kotlin.math.sqrt
 
 @ModuleInfo(name = "NoSlow", category = ModuleCategory.MOVEMENT)
 class NoSlow : Module() {
-    private val modeValue = ListValue("PacketMode", arrayOf("Vanilla", "LiquidBounce", "Custom", "WatchDog", "Watchdog2", "NCP", "AAC", "AAC5", "Matrix", "Vulcan"), "Vanilla")
+    private val modeValue = ListValue("PacketMode", arrayOf("Vanilla", "LiquidBounce", "Custom", "WatchDog", "Watchdog2", "NCP", "AAC", "AAC5", "Matrix", "Vulcan","Medusa"), "Vanilla")
     private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
     private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
     private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1.0F, 0.2F, 1.0F)
@@ -225,12 +225,18 @@ class NoSlow : Module() {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-
-        if((modeValue.equals("Matrix") || modeValue.equals("Vulcan")) && nextTemp) {
+        if (modeValue.equals("Medusa")) {
+            if (packet is C0BPacketEntityAction) {
+                if (packet.action == C0BPacketEntityAction.Action.START_SPRINTING) {
+                    event.cancelEvent()
+                }
+            }
+        }
+        if((modeValue.equals("Matrix") || modeValue.equals("Vulcan") || modeValue.equals("Medusa")) && nextTemp) {
             if((packet is C07PacketPlayerDigging || packet is C08PacketPlayerBlockPlacement) && isBlocking) {
                 event.cancelEvent()
             }else if (packet is C03PacketPlayer || packet is C0APacketAnimation || packet is C0BPacketEntityAction || packet is C02PacketUseEntity || packet is C07PacketPlayerDigging || packet is C08PacketPlayerBlockPlacement) {
-                if (modeValue.equals("Vulcan") && waitC03 && packet is C03PacketPlayer) {
+                if ((modeValue.equals("Vulcan") || modeValue.equals("Medusa")) && waitC03 && packet is C03PacketPlayer) {
                     waitC03 = false
                     return
                 }
